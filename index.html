@@ -241,7 +241,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                  <tr v-for="atlet in senaraiAtlet" :key="atlet.noSiri" class="hover:bg-gray-50 transition">
+                  <tr v-for="atlet in (senaraiAtlet || [])" :key="atlet.noSiri" class="hover:bg-gray-50 transition">
                     <td class="p-4 font-mono font-bold text-blue-600">{{ atlet.noSiri }}</td>
                     <td class="p-4 font-semibold text-gray-800">{{ atlet.nama }}</td>
                     <td class="p-4">
