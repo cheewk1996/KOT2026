@@ -255,7 +255,7 @@
                     <td class="p-4 text-gray-600">Darjah {{ atlet.darjah }}</td>
                     <td class="p-4 text-gray-600 font-medium">{{ atlet.kelas }}</td>
                   </tr>
-                  <tr v-if="!senaraiAtlet.length">
+                  <tr v-if="!senaraiAtlet || !senaraiAtlet.length">
                     <td colspan="5" class="p-8 text-center text-gray-400 italic">
                       Tiada rekod data atlet ditemui untuk paparan rumah sukan anda.
                     </td>
@@ -278,6 +278,7 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyGnN_wHYo9pMR3xWgz_j_nB4QMjoxGfAjrUvrYFXYgGRnJXB7USMMhMRb8xFsgFvZf/exec"; // Gantkan dengan URL Google Web App yang aktif
     const { createApp, ref, onMounted } = Vue;
+    const senaraiAtlet = ref([]); // WAJIB ada [] di dalam kurungan ini sebagai nilai awal (array)
 
     createApp({
       setup() {
