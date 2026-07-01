@@ -252,13 +252,17 @@
 
         const fetchDashboard = async () => {
           try {
-            let res = await fetch(API_URL);
+            // Tambah konfigurasi GET dan credentials: 'omit'
+            let res = await fetch(API_URL, {
+              method: 'GET',
+              credentials: 'omit' 
+            });
             let data = await res.json();
             if(data.status === "success") {
               dashboard.value = data;
               initChart(data.markah);
             }
-          } catch(e) { console.error(e); }
+          } catch(e) { console.error("Gagal dapat data dashboard", e); }
         };
 
         const initChart = (markah) => {
@@ -283,6 +287,7 @@
           try {
             let res = await fetch(API_URL, {
               method: 'POST',
+              credentials: 'omit', // Tambah baris ini supaya kebal ralat CORS
               body: JSON.stringify({ action: 'login', username: loginForm.value.username, password: loginForm.value.password })
             });
             let out = await res.json();
