@@ -44,7 +44,7 @@
         </div>
 
         <nav class="mt-4 space-y-1 px-2">
-          <a @click="setView('data_atlet')" :class="['flex items-center p-3 rounded hover:bg-slate-800 cursor-pointer', currentView==='data_atlet'?'bg-slate-800 text-white':'']">
+          <a @click="muatDataAtletView" :class="['flex items-center p-3 rounded hover:bg-slate-800 cursor-pointer', currentView==='data_atlet'?'bg-slate-800 text-white':'']">
             <span class="text-xl">🏃‍♂️</span> <span v-if="sidebarExpanded" class="ml-4 text-sm">Data Atlet</span>
           </a>
           <a @click="muatPendaftaranView" :class="['flex items-center p-3 rounded hover:bg-slate-800 cursor-pointer', currentView==='pendaftaran'?'bg-slate-800 text-white':'']">
@@ -347,12 +347,33 @@
             let out = await res.json();
             if(out.status === "success") {
               authUser.value = { username: out.username, nama: out.nama, peranan: out.peranan };
-              setView('data_atlet');
+              muatDataAtletView();
             } else { alert(out.message); }
           } catch(e) { alert("Ralat sambungan server."); }
           loading.value = false;
         };
 
+        const muatDataAtletView = async () => {
+          setView('data_atlet');
+          try {
+            let res = await fetch(API_URL, {
+              method: 'POST',
+              credentials: 'omit',
+              body: JSON.stringify({ 
+                action: 'getSenaraiAtlet', 
+                rumah: authUser.value.peranan, // Menapis automatik mengikut Rumah Sukan Guru
+                peranan: authUser.value.peranan,
+                filterTahun: 'Semua',
+                filterKelas: 'Semua'
+              })
+            });
+            let out = await res.json();
+            if(out.status === "success") {
+              senaraiAtlet.value = out.data;
+            }
+          } catch(e) { console.error("Ralat memuatkan senarai atlet: ", e); }
+        };
+        
         const muatPendaftaranView = async () => {
           setView('pendaftaran');
           await semakStatusKunciSemasa();
