@@ -226,7 +226,6 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyGnN_wHYo9pMR3xWgz_j_nB4QMjoxGfAjrUvrYFXYgGRnJXB7USMMhMRb8xFsgFvZf/exec"; // Gantkan dengan URL Google Web App yang aktif
-
     const { createApp, ref, onMounted } = Vue;
 
     createApp({
@@ -238,34 +237,37 @@
         const sidebarExpanded = ref(true);
         const mobileSidebarOpen = ref(false);
         
-        // Simpan maklumat akaun selepas login
         const authUser = ref({ username: '', nama: '', peranan: '' });
         const loginForm = ref({ username: '', password: '' });
         const dashboard = ref({ markah: {}, masa: '-', statusSahkan: 'Mati' });
         
-        // Pendaftaran State
         const selectedDarjah = ref(4);
         const statusKunciPendaftaran = ref('Terbuka');
         
-        // Admin View State
         const adminExtendedData = ref({ logs: [], senaraiKunci: [] });
 
+        // 1. Ambil Data Dashboard (FETCH DIKEMASKINI)
         const fetchDashboard = async () => {
           try {
-            // Tambah konfigurasi GET dan credentials: 'omit'
             let res = await fetch(API_URL, {
               method: 'GET',
-              credentials: 'omit' 
+              credentials: 'omit'
             });
             let data = await res.json();
             if(data.status === "success") {
               dashboard.value = data;
               initChart(data.markah);
             }
-          } catch(e) { console.error("Gagal dapat data dashboard", e); }
+          } catch(e) { console.error("Gagal memuatkan data dashboard: ", e); }
         };
 
+        // Pembaikan ralat 'Chart is not defined' sekiranya CDN disekat rangkaian
         const initChart = (markah) => {
+          if (typeof Chart === 'undefined') {
+            console.warn("Amaran: Chart.js gagal dimuatkan dari internet. Graf tidak dapat dipaparkan.");
+            return; 
+          }
+          
           const ctx = document.getElementById('chartRumah');
           if(!ctx) return;
           new Chart(ctx, {
@@ -282,12 +284,13 @@
           });
         };
 
+        // 2. Log Masuk Pengguna (FETCH DIKEMASKINI)
         const handleLogin = async () => {
           loading.value = true;
           try {
             let res = await fetch(API_URL, {
               method: 'POST',
-              credentials: 'omit', // Tambah baris ini supaya kebal ralat CORS
+              credentials: 'omit',
               body: JSON.stringify({ action: 'login', username: loginForm.value.username, password: loginForm.value.password })
             });
             let out = await res.json();
@@ -299,7 +302,6 @@
           loading.value = false;
         };
 
-        // Semak status kunci pendaftaran semasa membuka paparan
         const muatPendaftaranView = async () => {
           setView('pendaftaran');
           await semakStatusKunciSemasa();
@@ -310,10 +312,12 @@
           await semakStatusKunciSemasa();
         };
 
+        // 3. Semak Status Kunci Semasa (FETCH DIKEMASKINI)
         const semakStatusKunciSemasa = async () => {
           try {
             let res = await fetch(API_URL, {
               method: 'POST',
+              credentials: 'omit',
               body: JSON.stringify({ action: 'getStatusKunci', rumah: authUser.value.peranan, darjah: selectedDarjah.value })
             });
             let out = await res.json();
@@ -323,12 +327,13 @@
           } catch(e) { console.error(e); }
         };
 
-        // Fungsi Guru Hantar & Kunci Data
+        // 4. Guru Hantar & Kunci Data (FETCH DIKEMASKINI)
         const hantarPendaftaranRasmi = async () => {
           if(!confirm(`Anda pasti ingin menghantar dan mengunci data pendaftaran Darjah ${selectedDarjah.value}? Anda tidak boleh edit selepas ini.`)) return;
           try {
             let res = await fetch(API_URL, {
               method: 'POST',
+              credentials: 'omit',
               body: JSON.stringify({ 
                 action: 'hantarPendaftaran', 
                 rumah: authUser.value.peranan, 
@@ -342,12 +347,13 @@
           } catch(e) { alert("Gagal memproses hantaran."); }
         };
 
-        // Fungsi Admin muat log & panel kunci
+        // 5. Admin Muat Data & Log Sistem (FETCH DIKEMASKINI)
         const muatAdminView = async () => {
           setView('pengesahan');
           try {
             let res = await fetch(API_URL, {
               method: 'POST',
+              credentials: 'omit',
               body: JSON.stringify({ action: 'getAdminDataExtended' })
             });
             let out = await res.json();
@@ -357,12 +363,13 @@
           } catch(e) { console.error(e); }
         };
 
-        // Fungsi Admin batal kunci (Unlock)
+        // 6. Admin Batal Kunci / Unlock Data (FETCH DIKEMASKINI)
         const batalKunciPendaftaranAdmin = async (rumah, darjah) => {
           if(!confirm(`Anda pasti ingin batalkan sekatan dan buka semula pendaftaran untuk Rumah ${rumah} (Darjah ${darjah})?`)) return;
           try {
             let res = await fetch(API_URL, {
               method: 'POST',
+              credentials: 'omit',
               body: JSON.stringify({ 
                 action: 'batalHantarPendaftaran', 
                 targetRumah: rumah, 
@@ -372,18 +379,22 @@
             });
             let out = await res.json();
             alert(out.message);
-            await muatAdminView(); // refresh list
+            await muatAdminView(); 
           } catch(e) { alert("Gagal membuat perubahan."); }
         };
 
+        // 7. Carian Atlet Awam (FETCH DIKEMASKINI)
         const executeSearch = async () => {
           if(!searchKeyword.value) return;
-          let res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'cariAtletAwam', keyword: searchKeyword.value })
-          });
-          let out = await res.json();
-          if(out.status === "success") { searchResults.value = out.data; }
+          try {
+            let res = await fetch(API_URL, {
+              method: 'POST',
+              credentials: 'omit',
+              body: JSON.stringify({ action: 'cariAtletAwam', keyword: searchKeyword.value })
+            });
+            let out = await res.json();
+            if(out.status === "success") { searchResults.value = out.data; }
+          } catch(e) { alert("Gagal melakukan carian."); }
         };
 
         const setView = (v) => { currentView.value = v; mobileSidebarOpen.value = false; };
