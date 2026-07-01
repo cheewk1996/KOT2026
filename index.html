@@ -115,46 +115,130 @@
 
         
         
-        <div v-if="currentView === 'pendaftaran'" class="max-w-5xl mx-auto">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div v-if="currentView === 'pendaftaran'" class="max-w-6xl mx-auto space-y-6">
+          
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
             <div>
               <h2 class="text-2xl font-bold text-gray-900">Pendaftaran Acara Sukan</h2>
-              <p class="text-sm text-gray-500">Pengurusan pendaftaran atlet mengikut darjah semasa.</p>
+              <p class="text-sm text-gray-500">Rumah Sukan: <span class="font-bold text-blue-600">{{ authUser.peranan }}</span> | Status: 
+                <span :class="['px-2 py-0.5 rounded-full text-xs font-bold', statusKunciPendaftaran === 'Terbuka' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800']">
+                  {{ statusKunciPendaftaran }}
+                </span>
+              </p>
             </div>
-            <div :class="['px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 border', 
-                         statusKunciPendaftaran === 'Dikunci' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200']">
-              <span>Status:</span>
-              <span>{{ statusKunciPendaftaran === 'Dikunci' ? '🔒 DIKUNCI (Tidak Boleh Edit)' : '🔓 TERBUKA (Boleh Edit)' }}</span>
+            
+            <div class="inline-flex bg-gray-100 p-1.5 rounded-xl">
+              <button v-for="d in [4, 5, 6]" :key="d" @click="tukarDarjahPendaftaran(d)"
+                :class="['px-5 py-2 text-sm font-bold rounded-lg transition-all', selectedDarjah === d ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-500 hover:text-gray-900']">
+                Darjah {{ d }}
+              </button>
             </div>
           </div>
-
-          <div class="flex gap-2 mb-6 bg-gray-200 p-1.5 rounded-xl w-fit">
-            <button v-for="d in [4,5,6]" @click="tukarDarjahPendaftaran(d)" 
-              :class="['px-5 py-2 rounded-lg font-semibold text-sm transition', selectedDarjah === d ? 'bg-white shadow-xs text-blue-900' : 'text-gray-600']">
-              Darjah {{ d }}
+        
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="acara in senaraiAcara" :key="acara.id" class="bg-white rounded-2xl border border-gray-100 shadow-xs p-5 flex flex-col justify-between hover:border-blue-200 transition">
+              <div>
+                <div class="flex justify-between items-start mb-3">
+                  <h3 class="font-bold text-gray-900 text-lg">{{ acara.nama }}</h3>
+                  <span :class="['text-xs font-bold px-2.5 py-1 rounded-md', acara.jenis === 'individu' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700']">
+                    {{ acara.jenis === 'individu' ? 'Individu' : 'Berpasukan' }}
+                  </span>
+                </div>
+                
+                <div class="space-y-2 my-4">
+                  <div v-if="acara.jenis === 'individu'">
+                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                      <span>Atlet Terdaftar:</span>
+                      <span class="font-bold">{{ dapatkanJumlahTerdaftar(acara.id) }}/2</span>
+                    </div>
+                    <div class="space-y-1">
+                      <div v-for="atlet in dapatkanAtletTerdaftar(acara.id)" :key="atlet.noSiri" class="flex justify-between bg-gray-50 px-3 py-1.5 rounded-lg text-sm">
+                        <span class="text-gray-800 font-medium truncate max-w-[150px]">{{ atlet.nama }}</span>
+                        <span class="text-xs text-gray-400 font-mono">{{ atlet.kelas }}</span>
+                      </div>
+                    </div>
+                  </div>
+        
+                  <div v-else class="space-y-3">
+                    <div v-for="kump in ['A', 'B']" :key="kump" class="border border-dashed border-gray-100 p-2 rounded-xl bg-slate-50/50">
+                      <div class="flex justify-between items-center text-xs mb-1">
+                        <span class="font-bold text-slate-700">Kumpulan {{ kump }}</span>
+                        <span class="text-gray-400 font-mono">{{ dapatkanJumlahTerdaftarBerpasukan(acara.id, kump) }}/4 orang</span>
+                      </div>
+                      <div class="space-y-1">
+                        <div v-for="atlet in dapatkanAtletTerdaftarBerpasukan(acara.id, kump)" :key="atlet.noSiri" class="text-xs bg-white border px-2 py-1 rounded flex justify-between">
+                          <span class="truncate max-w-[140px] font-medium text-gray-700">{{ atlet.nama }}</span>
+                          <span class="text-[10px] font-mono text-gray-400">{{ atlet.kelas }}</span>
+                        </div>
+                      </div>
+                      <button v-if="statusKunciPendaftaran === 'Terbuka'" @click="bukaPopupDaftar(acara, kump)" class="w-full mt-1.5 bg-white hover:bg-purple-50 text-purple-600 text-[11px] font-bold py-1 border border-purple-200 rounded-md transition">
+                        + Set Kumpulan {{ kump }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+        
+              <button v-if="acara.jenis === 'individu' && statusKunciPendaftaran === 'Terbuka'" 
+                @click="bukaPopupDaftar(acara)" 
+                :disabled="dapatkanJumlahTerdaftar(acara.id) >= 2"
+                :class="['w-full mt-4 font-bold py-2.5 rounded-xl transition flex justify-center items-center gap-2 text-sm', 
+                  dapatkanJumlahTerdaftar(acara.id) >= 2 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs']">
+                <span>➕ Urus Atlet</span>
+              </button>
+            </div>
+          </div>
+        
+          <div class="flex justify-end pt-4" v-if="statusKunciPendaftaran === 'Terbuka'">
+            <button @click="hantarPendaftaranRasmi" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-xl transition shadow-md">
+              🔒 Sahkan & Kunci Pendaftaran Darjah {{ selectedDarjah }}
             </button>
           </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
-              <div class="flex justify-between items-center mb-2">
-                <span class="font-bold text-gray-800">Balapan 100m (Individu)</span>
-                <button :disabled="statusKunciPendaftaran === 'Dikunci'" @click="bukaPopupDaftar('100m')"
-                  class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold hover:bg-blue-700 disabled:bg-gray-300">
-                  +
+        
+          <div v-if="showPopupDaftar" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-xl border w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
+              <div class="p-5 border-b bg-slate-950 text-white">
+                <h4 class="font-bold text-lg">{{ targetAcara?.nama }}</h4>
+                <p class="text-xs text-slate-300">
+                  Menguruskan pemilihan peserta Darjah {{ selectedDarjah }} 
+                  <span v-if="targetAcara?.jenis === 'berpasukan'" class="font-bold text-yellow-400">(Kumpulan {{ targetKumpulan }})</span>
+                </p>
+              </div>
+              
+              <div class="p-5 overflow-y-auto flex-1 space-y-3 bg-slate-50">
+                <p class="text-xs font-semibold text-gray-500">Sila tandakan (tick) atlet pilihan anda di bawah:</p>
+                
+                <div class="space-y-2">
+                  <label v-for="murid in senaraiAtletTapisDarjah" :key="murid.noSiri" 
+                    :class="['flex items-center justify-between p-3 rounded-xl border bg-white cursor-pointer select-none transition', 
+                      selectedAtletsInPopup.includes(murid.noSiri) ? 'border-blue-500 bg-blue-50/40 ring-1 ring-blue-400' : 'border-gray-200 hover:bg-gray-50']">
+                    <div class="flex items-center gap-3">
+                      <input type="checkbox" :value="murid.noSiri" v-model="selectedAtletsInPopup" class="w-4 h-4 rounded text-blue-600 border-gray-300 focus:ring-blue-500">
+                      <div>
+                        <p class="font-bold text-gray-900 text-sm">{{ murid.nama }}</p>
+                        <p class="text-xs text-gray-400 font-mono">{{ murid.kelas }}</p>
+                      </div>
+                    </div>
+                    <div class="text-right text-[11px] text-gray-400 font-medium">
+                      Individu: {{ hitungAcaraIndividuAtlet(murid.noSiri) }}/2 | Pasukan: {{ hitungAcaraPasukanAtlet(murid.noSiri) }}/1
+                    </div>
+                  </label>
+                  
+                  <div v-if="!senaraiAtletTapisDarjah.length" class="text-center p-6 text-gray-400 italic text-sm">
+                    Tiada rekod data atlet bagi Darjah {{ selectedDarjah }} ditemui di dalam database.
+                  </div>
+                </div>
+              </div>
+              
+              <div class="p-4 border-t bg-white flex justify-end gap-3">
+                <button @click="tutupPopupDaftar" class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+                  Batal
+                </button>
+                <button @click="simpanPendaftaranAcara" class="px-5 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs">
+                  Simpan Pendaftaran
                 </button>
               </div>
-              <p class="text-xs text-gray-400">Maksimum 2 atlet wakil rumah sukan.</p>
             </div>
-            </div>
-
-          <div v-if="statusKunciPendaftaran === 'Terbuka'" class="bg-yellow-50 border border-yellow-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
-            <p class="text-sm text-yellow-800 font-medium">
-              ⚠️ <strong>Peringatan:</strong> Sila pastikan semua pendaftaran atlet Darjah {{ selectedDarjah }} telah lengkap. Selepas anda menekan butang <strong>"Hantar & Kunci"</strong>, anda tidak lagi dibenarkan melakukan sebarang perubahan data.
-            </p>
-            <button @click="hantarPendaftaranRasmi" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold shadow-md transition whitespace-nowrap">
-              🚀 Hantar & Kunci Data
-            </button>
           </div>
         </div>
 
@@ -298,6 +382,25 @@
         
         const adminExtendedData = ref({ logs: [], senaraiKunci: [] });
 
+        const senaraiAcara = [
+          { id: 'b100', nama: 'Balapan 100m', jenis: 'individu' },
+          { id: 'b200', nama: 'Balapan 200m', jenis: 'individu' },
+          { id: 'ltinggi', nama: 'Lompat Tinggi', jenis: 'individu' },
+          { id: 'ljauh', nama: 'Lompat Jauh', jenis: 'individu' },
+          { id: 'lpeluru', nama: 'Lontar Peluru', jenis: 'individu' },
+          { id: 'b4x100', nama: 'Balapan 4x100m', jenis: 'berpasukan' },
+          { id: 'b4x200', nama: 'Balapan 4x200m', jenis: 'berpasukan' }
+        ];
+        
+        // Memori Tempatan Struktur Pendaftaran: { '4': { 'b100': ['SIRI01', 'SIRI02'] } }
+        const mapPendaftaran = ref({}); 
+        
+        const showPopupDaftar = ref(false);
+        const targetAcara = ref(null);
+        const targetKumpulan = ref('A');
+        const selectedAtletsInPopup = ref([]);
+        const senaraiAtlet = ref([]); // Pastikan sudah diisytiharkan awal []
+        
         // 1. Ambil Data Dashboard (FETCH DIKEMASKINI)
         const fetchDashboard = async () => {
           try {
@@ -378,13 +481,146 @@
         const muatPendaftaranView = async () => {
           setView('pendaftaran');
           await semakStatusKunciSemasa();
+          
+          // Tarik data atlet serentak untuk rujukan modal pendaftaran
+          try {
+            let res = await fetch(API_URL, { method: 'POST', credentials: 'omit', body: JSON.stringify({ action: 'getSenaraiAtlet', rumah: authUser.value.peranan, peranan: authUser.value.peranan }) });
+            let out = await res.json();
+            if(out.status === "success") { senaraiAtlet.value = out.data; }
+          } catch(e) { console.error(e); }
         };
 
         const tukarDarjahPendaftaran = async (d) => {
           selectedDarjah.value = d;
           await semakStatusKunciSemasa();
         };
-
+        
+        // Memfilter senarai atlet yang sepadan dengan Rumah Sukan guru dan Darjah tab yang dipilih sahaja
+        const senaraiAtletTapisDarjah = Vue.computed(() => {
+          return (senaraiAtlet.value || []).filter(a => 
+            a.rumah === authUser.value.peranan && 
+            Number(a.darjah) === Number(selectedDarjah.value)
+          );
+        });
+        
+        // Fungsi Membuka Popup Modal Pendaftaran
+        const bukaPopupDaftar = (acara, kump = 'A') => {
+          targetAcara.value = acara;
+          targetKumpulan.value = kump;
+          
+          const darjahKunci = selectedDarjah.value.toString();
+          if (!mapPendaftaran.value[darjahKunci]) mapPendaftaran.value[darjahKunci] = {};
+          
+          // Ambil data sedia ada jika sudah pernah didaftar sebelum ini
+          if (acara.jenis === 'individu') {
+            selectedAtletsInPopup.value = [...(mapPendaftaran.value[darjahKunci][acara.id] || [])];
+          } else {
+            if (!mapPendaftaran.value[darjahKunci][acara.id]) mapPendaftaran.value[darjahKunci][acara.id] = { A: [], B: [] };
+            selectedAtletsInPopup.value = [...(mapPendaftaran.value[darjahKunci][acara.id][kump] || [])];
+          }
+          showPopupDaftar.value = true;
+        };
+        
+        const tutupPopupDaftar = () => {
+          showPopupDaftar.value = false;
+          targetAcara.value = null;
+          selectedAtletsInPopup.value = [];
+        };
+        
+        // Hitung rekod penyertaan acara individu semasa bagi seseorang atlet
+        const hitungAcaraIndividuAtlet = (noSiri) => {
+          const darjahKunci = selectedDarjah.value.toString();
+          let count = 0;
+          if (!mapPendaftaran.value[darjahKunci]) return 0;
+          
+          senaraiAcara.filter(a => a.jenis === 'individu').forEach(acara => {
+            const list = mapPendaftaran.value[darjahKunci][acara.id] || [];
+            // Kecualikan acara yang sedang disunting dalam popup sekarang supaya pengiraan dinamik tepat
+            if (targetAcara.value && targetAcara.value.id === acara.id) return;
+            if (list.includes(noSiri)) count++;
+          });
+          return count;
+        };
+        
+        // Hitung rekod penyertaan acara berpasukan semasa bagi seseorang atlet
+        const hitungAcaraPasukanAtlet = (noSiri) => {
+          const darjahKunci = selectedDarjah.value.toString();
+          let count = 0;
+          if (!mapPendaftaran.value[darjahKunci]) return 0;
+          
+          senaraiAcara.filter(a => a.jenis === 'berpasukan').forEach(acara => {
+            const obj = mapPendaftaran.value[darjahKunci][acara.id] || { A: [], B: [] };
+            ['A', 'B'].forEach(k => {
+              // Kecualikan slot kumpulan yang sedang disunting dalam popup sekarang
+              if (targetAcara.value && targetAcara.value.id === acara.id && targetKumpulan.value === k) return;
+              if (obj[k] && obj[k].includes(noSiri)) count++;
+            });
+          });
+          return count;
+        };
+        
+        // SIMPAN & VALIDASI SISTEM MENGIKUT SYARAT YANG ANDA TETAPKAN
+        const simpanPendaftaranAcara = () => {
+          const darjahKunci = selectedDarjah.value.toString();
+          const acara = targetAcara.value;
+          
+          // Validasi Had Quota Bilangan Atas Kad Acara
+          if (acara.jenis === 'individu' && selectedAtletsInPopup.value.length > 2) {
+            alert("Ralat: Acara individu hanya membenarkan maksimum 2 orang atlet sahaja.");
+            return;
+          }
+          if (acara.jenis === 'berpasukan' && selectedAtletsInPopup.value.length > 4) {
+            alert("Ralat: Acara berpasukan wajib diisi oleh maksimum 4 orang atlet sepasukan.");
+            return;
+          }
+        
+          // Validasi Had Maksimum Penyertaan Setiap Individu Atlet
+          for (let noSiri of selectedAtletsInPopup.value) {
+            const sediaIndividu = hitungAcaraIndividuAtlet(noSiri);
+            const sediaPasukan = hitungAcaraPasukanAtlet(noSiri);
+            
+            if (acara.jenis === 'individu' && (sediaIndividu + 1) > 2) {
+              alert(`Ralat: Terdapat atlet yang telah melebihi had maksimum mendaftar 2 acara individu.`);
+              return;
+            }
+            if (acara.jenis === 'berpasukan' && (sediaPasukan + 1) > 1) {
+              alert(`Ralat: Terdapat atlet yang telah melebihi had maksimum mendaftar 1 acara berpasukan.`);
+              return;
+            }
+          }
+        
+          // Simpan ke dalam state memori Vue
+          if (acara.jenis === 'individu') {
+            mapPendaftaran.value[darjahKunci][acara.id] = [...selectedAtletsInPopup.value];
+          } else {
+            mapPendaftaran.value[darjahKunci][acara.id][targetKumpulan.value] = [...selectedAtletsInPopup.value];
+          }
+        
+          alert("Pendaftaran berjaya disimpan sementara!");
+          tutupPopupDaftar();
+        };
+        
+        // Fungsi Helper untuk Paparan Nama Pada Kad UI Utama
+        const dapatkanAtletTerdaftar = (acaraId) => {
+          const darjahKunci = selectedDarjah.value.toString();
+          const listId = mapPendaftaran.value[darjahKunci]?.[acaraId] || [];
+          return senaraiAtlet.value.filter(a => listId.includes(a.noSiri));
+        };
+        
+        const dapatkanJumlahTerdaftar = (acaraId) => {
+          return (mapPendaftaran.value[selectedDarjah.value.toString()]?.[acaraId] || []).length;
+        };
+        
+        const dapatkanAtletTerdaftarBerpasukan = (acaraId, kump) => {
+          const darjahKunci = selectedDarjah.value.toString();
+          const listId = mapPendaftaran.value[darjahKunci]?.[acaraId]?.[kump] || [];
+          return senaraiAtlet.value.filter(a => listId.includes(a.noSiri));
+        };
+        
+        const dapatkanJumlahTerdaftarBerpasukan = (acaraId, kump) => {
+          return (mapPendaftaran.value[selectedDarjah.value.toString()]?.[acaraId]?.[kump] || []).length;
+        };
+        
         // 3. Semak Status Kunci Semasa (FETCH DIKEMASKINI)
         const semakStatusKunciSemasa = async () => {
           try {
@@ -482,9 +718,9 @@
 
         return {
           currentView, loading, searchKeyword, searchResults, sidebarExpanded, mobileSidebarOpen, authUser, loginForm, dashboard, selectedDarjah, statusKunciPendaftaran, adminExtendedData,
-          senaraiAtlet, // <-- Kita tambah ini supaya HTML boleh baca data jadual atlet
-          setView, toggleSidebar, handleLogin, executeSearch, logout, muatPendaftaranView, tukarDarjahPendaftaran, hantarPendaftaranRasmi, muatAdminView, batalKunciPendaftaranAdmin,
-          muatDataAtletView, bukaPopupDaftar // <-- Kita tambah ini supaya butang/menu boleh panggil fungsi ini
+          senaraiAtlet, muatDataAtletView, senaraiAcara, showPopupDaftar, targetAcara, targetKumpulan, selectedAtletsInPopup, senaraiAtletTapisDarjah,
+          bukaPopupDaftar, tutupPopupDaftar, simpanPendaftaranAcara, dapatkanAtletTerdaftar, dapatkanJumlahTerdaftar, dapatkanAtletTerdaftarBerpasukan, dapatkanJumlahTerdaftarBerpasukan,
+          hitungAcaraIndividuAtlet, hitungAcaraPasukanAtlet, muatPendaftaranView, tukarDarjahPendaftaran, hantarPendaftaranRasmi, muatAdminView, batalKunciPendaftaranAdmin
         }
       }
     }).mount('#app');
