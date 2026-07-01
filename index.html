@@ -112,8 +112,6 @@
             </div>
           </div>
         </div>
-
-        
         
         <div v-if="currentView === 'pendaftaran'" class="max-w-6xl mx-auto space-y-6">
           
@@ -361,7 +359,7 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyGnN_wHYo9pMR3xWgz_j_nB4QMjoxGfAjrUvrYFXYgGRnJXB7USMMhMRb8xFsgFvZf/exec"; // Gantkan dengan URL Google Web App yang aktif
-    const { createApp, ref, onMounted } = Vue;
+    const { createApp, ref, computed, onMounted } = Vue;
     const senaraiAtlet = ref([]); // WAJIB ada [] di dalam kurungan ini sebagai nilai awal (array)
 
     createApp({
