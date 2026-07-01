@@ -113,6 +113,8 @@
           </div>
         </div>
 
+        
+        
         <div v-if="currentView === 'pendaftaran'" class="max-w-5xl mx-auto">
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
@@ -215,9 +217,58 @@
           </div>
         </div>
 
-        <div v-if="currentView==='data_atlet'||currentView==='keputusan'" class="p-6 bg-white border rounded-xl shadow-xs">
-          <h2 class="text-xl font-bold mb-2 uppercase">{{ currentView }} Screen</h2>
-          <p class="text-sm text-gray-400">Modul ini diintegrasikan bersama fungsi data utama mengikut spesifikasi asas asal.</p>
+        <div v-if="currentView === 'data_atlet'" class="max-w-6xl mx-auto space-y-6">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">Senarai Roster Atlet Terdaftar</h2>
+              <p class="text-sm text-gray-500">Memaparkan semua atlet mengikut hak akses Rumah Sukan anda.</p>
+            </div>
+            <button @click="muatDataAtletView" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition shadow-xs">
+              🔄 Segarkan Senarai
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm border-collapse">
+                <thead class="bg-slate-900 text-white font-semibold">
+                  <tr>
+                    <th class="p-4">No. Siri</th>
+                    <th class="p-4">Nama Atlet</th>
+                    <th class="p-4">Rumah Sukan</th>
+                    <th class="p-4">Darjah / Tahun</th>
+                    <th class="p-4">Kelas</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <tr v-for="atlet in senaraiAtlet" :key="atlet.noSiri" class="hover:bg-gray-50 transition">
+                    <td class="p-4 font-mono font-bold text-blue-600">{{ atlet.noSiri }}</td>
+                    <td class="p-4 font-semibold text-gray-800">{{ atlet.nama }}</td>
+                    <td class="p-4">
+                      <span :class="['px-2.5 py-1 rounded-full text-xs font-bold', 
+                        atlet.rumah === 'McNeil' ? 'bg-blue-100 text-blue-800' :
+                        atlet.rumah === 'Playne' ? 'bg-red-100 text-red-800' :
+                        atlet.rumah === 'Pring' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800']">
+                        {{ atlet.rumah }}
+                      </span>
+                    </td>
+                    <td class="p-4 text-gray-600">Darjah {{ atlet.darjah }}</td>
+                    <td class="p-4 text-gray-600 font-medium">{{ atlet.kelas }}</td>
+                  </tr>
+                  <tr v-if="!senaraiAtlet.length">
+                    <td colspan="5" class="p-8 text-center text-gray-400 italic">
+                      Tiada rekod data atlet ditemui untuk paparan rumah sukan anda.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="currentView === 'keputusan'" class="p-6 bg-white border rounded-xl shadow-xs">
+          <h2 class="text-xl font-bold mb-2 uppercase">Skrin Keputusan</h2>
+          <p class="text-sm text-gray-400">Modul paparan keputusan kejohanan semasa.</p>
         </div>
 
       </main>
