@@ -477,7 +477,9 @@
 
         return {
           currentView, loading, searchKeyword, searchResults, sidebarExpanded, mobileSidebarOpen, authUser, loginForm, dashboard, selectedDarjah, statusKunciPendaftaran, adminExtendedData,
-          setView, toggleSidebar, handleLogin, executeSearch, logout, muatPendaftaranView, tukarDarjahPendaftaran, hantarPendaftaranRasmi, muatAdminView, batalKunciPendaftaranAdmin
+          senaraiAtlet, // <-- Kita tambah ini supaya HTML boleh baca data jadual atlet
+          setView, toggleSidebar, handleLogin, executeSearch, logout, muatPendaftaranView, tukarDarjahPendaftaran, hantarPendaftaranRasmi, muatAdminView, batalKunciPendaftaranAdmin,
+          muatDataAtletView // <-- Kita tambah ini supaya butang/menu boleh panggil fungsi ini
         }
       }
     }).mount('#app');
