@@ -399,7 +399,11 @@
             }
           } catch(e) { console.error(e); }
         };
-
+        
+        const bukaPopupDaftar = () => {
+          console.log("Popup pendaftaran dibuka!");
+        };
+        
         // 4. Guru Hantar & Kunci Data (FETCH DIKEMASKINI)
         const hantarPendaftaranRasmi = async () => {
           if(!confirm(`Anda pasti ingin menghantar dan mengunci data pendaftaran Darjah ${selectedDarjah.value}? Anda tidak boleh edit selepas ini.`)) return;
@@ -480,7 +484,7 @@
           currentView, loading, searchKeyword, searchResults, sidebarExpanded, mobileSidebarOpen, authUser, loginForm, dashboard, selectedDarjah, statusKunciPendaftaran, adminExtendedData,
           senaraiAtlet, // <-- Kita tambah ini supaya HTML boleh baca data jadual atlet
           setView, toggleSidebar, handleLogin, executeSearch, logout, muatPendaftaranView, tukarDarjahPendaftaran, hantarPendaftaranRasmi, muatAdminView, batalKunciPendaftaranAdmin,
-          muatDataAtletView // <-- Kita tambah ini supaya butang/menu boleh panggil fungsi ini
+          muatDataAtletView, bukaPopupDaftar // <-- Kita tambah ini supaya butang/menu boleh panggil fungsi ini
         }
       }
     }).mount('#app');
